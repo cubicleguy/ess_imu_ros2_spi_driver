@@ -1,4 +1,4 @@
-"""Launch file for Epson G320PDG0, G354PDH0, G364PCx imu_node for ess_imu_ros2_spi_driver package"""
+"""Launch file for Epson G330PDG0, G365PDx1, G366PDG0 imu_node (with orientation field disabled) for ess_imu_ros2_spi_driver package"""
 
 from launch import LaunchDescription
 import launch_ros.actions
@@ -26,21 +26,23 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 name="imu_dout_rate",
-                # value: output rate (Hz)
-                # 0: 2000
-                # 1: 1000
-                # 2: 500
-                # 3: 250
-                # 4: 125
-                # 5: 62.5
-                # 6: 31.25
-                # 7: 15.625
-                # 8: 400
-                # 9: 200
-                # 10: 100
-                # 11: 80
-                # 12: 40
-                # 13: 20
+                # value: output rate (Hz)     Recommended Moving Average Filter
+                # 0: 2000                     TAP>=0
+                # 1: 1000                     TAP>=2
+                # 2: 500                      TAP>=4
+                # 3: 250                      TAP>=8
+                # 4: 125                      TAP>=16
+                # 5: 62.5                     TAP>=32
+                # 6: 31.25                    TAP>=64
+                # 7: 15.625                   TAP=128
+                # 8: 400                      TAP>=8
+                # 9: 200                      TAP>=16
+                # 10: 100                     TAP>=32
+                # 11: 80                      TAP>=32
+                # 12: 50                      TAP>=64
+                # 13: 40                      TAP>=64
+                # 14: 25                      TAP=128
+                # 15: 20                      TAP=128
                 default_value="4",
                 description="Sets data output rate of IMU",
             ),
@@ -67,7 +69,7 @@ def generate_launch_description():
                 # 17: KAISER TAP128 Fc=100 Hz
                 # 18: KAISER TAP128 Fc=200 Hz
                 # 19: KAISER TAP128 Fc=400 Hz
-                default_value="6",
+                default_value="5",
                 description="Sets the IMU filter",
             ),
             DeclareLaunchArgument(

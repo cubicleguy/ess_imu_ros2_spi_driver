@@ -12,8 +12,11 @@
 //  SOFTWARE.
 //
 //==============================================================================
+
+#include <stdio.h>
+#include <stdint.h>
+
 #include "hcl.h"
-#include "hcl_gpio.h"
 #include "sensor_epsonCommon.h"
 
 /*****************************************************************************
@@ -21,7 +24,7 @@
 ** Description:         Initialize the sensor hardware to desired settings
 **                      based on EpsonOptions
 ** Parameters:          struct EpsonOptions
-** Return value:        SUCCESS or FAIL
+** Return value:        OK or NG
 **
 *****************************************************************************/
 int sensorInitOptions(struct EpsonOptions options) {
@@ -97,21 +100,22 @@ int sensorInitOptions(struct EpsonOptions options) {
 
   // DLT_CTRL
   // Enable or disable Delta Angle/Velocity overflow flag in DIAG_STAT
+  // Set A_RANGE_CTRL to 1, if macro defined
   // Set the Delta Angle/Velocity Scale Factor
 
+#ifdef ACCL_RANGE_16G
+  int dlt_ctrl_hi = (options.dlt_ovf_en & 0x01) << 1 | 1;
+#else
   int dlt_ctrl_hi = (options.dlt_ovf_en & 0x01) << 1;
-  int dlt_ctrl_lo = (options.dlt_range_ctrl & 0x0F);
+#endif  // ACCL_RANGE_16G
+  int dlt_ctrl_lo =
+      (options.dlt_range_ctrl & 0x0F) << 4 | (options.dlt_range_ctrl & 0x0F);
 
   // ATTI_CTRL
   // For G370, Attitude Output is not supported.
   // This is only for Delta Angle/Velocity function if enabled.
 
   int atti_ctrl_hi = (options.gyro_delta_out & 0x01) << 1;
-
-  // ATTI_CTRL
-  // Actually not used for G370
-
-  int atti_ctrl_lo = 0x00;
 
   // POL_CTRL
   // If these bits are set, then the axis values are reverse polarity
@@ -143,7 +147,7 @@ int sensorInitOptions(struct EpsonOptions options) {
 
   if (retryCount == 0) {
     printf("\r\n...Error: Filter busy bit did not return to 0b.");
-    return FALSE;
+    return NG;
   }
 
 #ifdef SPI  // Always disable UART_AUTO mode for burst reading when using SPI IF
@@ -158,9 +162,8 @@ int sensorInitOptions(struct EpsonOptions options) {
   registerWriteByte(CMD_WINDOW1, ADDR_DLT_CTRL_HI, dlt_ctrl_hi, debug);
   registerWriteByte(CMD_WINDOW1, ADDR_DLT_CTRL_LO, dlt_ctrl_lo, debug);
   registerWriteByte(CMD_WINDOW1, ADDR_ATTI_CTRL_HI, atti_ctrl_hi, debug);
-  registerWriteByte(CMD_WINDOW1, ADDR_ATTI_CTRL_LO, atti_ctrl_lo, debug);
 
-  return TRUE;
+  return OK;
 }
 
 /*****************************************************************************
@@ -198,14 +201,13 @@ void registerDump(void) {
   printf("\r\n");
   registerRead16(0x00, 0x26, debug);
   registerRead16(0x00, 0x28, debug);
+
+#if defined G370PDF1 || defined G370PDS0
   registerRead16(0x00, 0x2B, debug);
-  printf("\r\n");
-
-#ifdef G370PDF1
   registerRead16(0x00, 0x4C, debug);
-  printf("\r\n");
-#endif  // G370PDF1
+#endif  // defined G370PDF1 || defined G370PDS0
 
+  printf("\r\n");
   registerRead16(0x00, 0x64, debug);
   registerRead16(0x00, 0x66, debug);
   registerRead16(0x00, 0x68, debug);

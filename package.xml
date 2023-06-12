@@ -1,10 +1,15 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>epson_imu_spi_ros2</name>
-  <version>1.0.0</version>
-  <description>C++ Wrapper for ROS2 node of epson_imu_spi_driver package</description>
+  <name>ess_imu_ros2_spi_driver</name>
+  <version>1.1.0</version>
+  <description>ROS2 package for Epson IMU using SPI interface based on C++ wrapper of Linux C driver</description>
   <maintainer email="raymond.chow@ea.epson.com">Raymond Chow</maintainer>
   <license>BSD-3</license>
+  <license>Public Domain</license>
+
+  <url type="website">https://wiki.ros.org/ess_imu_ros2_spi_driver</url>
+  <url type="repository">https://github.com/cubicleguy/ess_imu_ros2_spi_driver.git</url>
+
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
 

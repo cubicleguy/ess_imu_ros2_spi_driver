@@ -12,8 +12,10 @@
 //  SOFTWARE.
 //
 //==============================================================================
+#include <stdio.h>
+#include <stdint.h>
+
 #include "hcl.h"
-#include "hcl_gpio.h"
 #include "sensor_epsonCommon.h"
 
 /*****************************************************************************
@@ -21,7 +23,7 @@
 ** Description:         Initialize the sensor hardware to desired settings
 **                      based on EpsonOptions
 ** Parameters:          struct EpsonOptions
-** Return value:        SUCCESS or FAIL
+** Return value:        OK or NG
 **
 *****************************************************************************/
 int sensorInitOptions(struct EpsonOptions options) {
@@ -91,7 +93,7 @@ int sensorInitOptions(struct EpsonOptions options) {
 
   registerWriteByte(CMD_WINDOW1, ADDR_COUNT_CTRL_LO, count_ctrl_lo, debug);
 
-  return TRUE;
+  return OK;
 }
 
 /*****************************************************************************

@@ -13,9 +13,13 @@
 //  SOFTWARE.
 //
 //==============================================================================
-#include "sensor_epsonCommon.h"
+
+#include <stdint.h>
+#include <stdio.h>
+
 #include "hcl.h"
 #include "hcl_gpio.h"
+#include "sensor_epsonCommon.h"
 
 /*****************************************************************************
 ** Function name:       sensorHWReset
@@ -74,7 +78,6 @@ int sensorPowerOn(void) {
 
   if (retryCount == 0) {
     printf("\r\n...Error: Stuck in Sampling Mode.");
-    return NG;
   }
 
   // Hardware Reset if connected, and check for NOT_READY flag
@@ -136,12 +139,12 @@ void sensorReset(void) {
 /*****************************************************************************
 ** Function name:       sensorFlashTest
 ** Description:         Send Flashtest command to Sensor and check status
-**                      NOTE: Not supported for V340
+**                      NOTE: Not supported for V340PDD0
 ** Parameters:          None
 ** Return value:        OK or NG
 *****************************************************************************/
 int sensorFlashTest(void) {
-#if defined V340
+#if defined V340PDD0
   // always return OK
 #else
   unsigned int debug = FALSE;
@@ -210,8 +213,8 @@ int sensorSelfTest(void) {
 ** Return value:        OK or NG
 *****************************************************************************/
 int sensorInitialBackup(void) {
-#if defined G354 || defined G364PDCA || defined G364PDC0 || defined V340 || \
-    defined G320
+#if defined G354PDH0 || defined G364PDCA || defined G364PDC0 || \
+    defined V340PDD0 || defined G320PDG0
   // always return OK
 #else
   unsigned int debug = FALSE;
@@ -246,7 +249,7 @@ int sensorInitialBackup(void) {
 unsigned int sensorDataByteLength(struct EpsonOptions options) {
   unsigned int length = 0;
 
-#ifdef V340
+#ifdef V340PDD0
   // V340 has fixed packet format with optional 16-bit count value
   length = 18;
 
@@ -294,10 +297,10 @@ unsigned int sensorDataByteLength(struct EpsonOptions options) {
       length += 6;
   }
 
-#if defined G365PDC0 || defined G365PDF0 || defined G325PDF0 || \
-    defined G365PDC1 || defined G365PDF1 || defined G325PDF1
+#if defined G325PDF1 || defined G365PDC1 || defined G365PDF1 || \
+    defined G330PDG0 || defined G366PDG0
   // 16 or 32 bit Quaternion1,2,3,4 Output
-  // NOTE: Only supported by G365PDCx/G365PDFx/G325PDFx
+  // NOTE: Only supported by G330/G366/G365PDCx/G365PDFx/G325PDFx
   if (options.qtn_out) {
     if (options.qtn_bit)
       length += 16;
@@ -305,7 +308,7 @@ unsigned int sensorDataByteLength(struct EpsonOptions options) {
       length += 8;
   }
   // 16 or 32 bit Attitude X, Y, Z Output
-  // NOTE: Only supported by G365PDC0/G365PDF0/G325PDF0
+  // NOTE: Only supported by G330/G366/G365PDCx/G365PDFx/G325PDFx
   if (options.atti_out) {
     if (options.atti_bit)
       length += 12;
@@ -352,4 +355,60 @@ void sensorDummyWrite(void) {
   registerWriteByteNoId(ADDR_WIN_CTRL, 0x00, debug);
   seDelayMicroSecs(100000);
   printf("\r\n...sensorDummyWrite.");
+}
+
+/*****************************************************************************
+** Function name:       getProductId
+** Description:         Updates char array with Product ID ASCII
+**
+** Parameters:          pointer to String
+** Return value:        pointer to String
+*****************************************************************************/
+char* getProductId(char* pcharArr) {
+  unsigned short prod_id1 = registerRead16(CMD_WINDOW1, ADDR_PROD_ID1, FALSE);
+  unsigned short prod_id2 = registerRead16(CMD_WINDOW1, ADDR_PROD_ID2, FALSE);
+  unsigned short prod_id3 = registerRead16(CMD_WINDOW1, ADDR_PROD_ID3, FALSE);
+  unsigned short prod_id4 = registerRead16(CMD_WINDOW1, ADDR_PROD_ID4, FALSE);
+
+  pcharArr[0] = (char)prod_id1;
+  pcharArr[1] = (char)(prod_id1 >> 8);
+  pcharArr[2] = (char)prod_id2;
+  pcharArr[3] = (char)(prod_id2 >> 8);
+  pcharArr[4] = (char)prod_id3;
+  pcharArr[5] = (char)(prod_id3 >> 8);
+  pcharArr[6] = (char)prod_id4;
+  pcharArr[7] = (char)(prod_id4 >> 8);
+  pcharArr[8] = '\0';
+
+  return (pcharArr);
+}
+
+/*****************************************************************************
+** Function name:       getSerialId
+** Description:         Updates char array with Serial ID ASCII
+**
+** Parameters:          pointer to String
+** Return value:        pointer to String
+*****************************************************************************/
+char* getSerialId(char* pcharArr) {
+  unsigned short ser_num1 =
+      registerRead16(CMD_WINDOW1, ADDR_SERIAL_NUM1, FALSE);
+  unsigned short ser_num2 =
+      registerRead16(CMD_WINDOW1, ADDR_SERIAL_NUM2, FALSE);
+  unsigned short ser_num3 =
+      registerRead16(CMD_WINDOW1, ADDR_SERIAL_NUM3, FALSE);
+  unsigned short ser_num4 =
+      registerRead16(CMD_WINDOW1, ADDR_SERIAL_NUM4, FALSE);
+
+  pcharArr[0] = (char)ser_num1;
+  pcharArr[1] = (char)(ser_num1 >> 8);
+  pcharArr[2] = (char)ser_num2;
+  pcharArr[3] = (char)(ser_num2 >> 8);
+  pcharArr[4] = (char)ser_num3;
+  pcharArr[5] = (char)(ser_num3 >> 8);
+  pcharArr[6] = (char)ser_num4;
+  pcharArr[7] = (char)(ser_num4 >> 8);
+  pcharArr[8] = '\0';
+
+  return pcharArr;
 }

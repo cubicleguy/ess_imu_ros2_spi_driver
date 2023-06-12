@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(epson_imu_spi_ros2)
+project(ess_imu_ros2_spi_driver)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -22,44 +22,39 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-# Specify DEBUG macro to enable any debug code by adding "-DDEBUG" in add_definitions()
-#add_definitions(-DDEBUG)
 
 # Refer to the README_src.md inside the src folder for more details about IMU macro
 # Uncomment the imu_model to build for
 # NOTE: Change IMU models require rebuilding binaries with colcon
-#set(imu_model "G325PDF0")
-#set(imu_model "G325PDF1")
-#set(imu_model "G365PDF0")
-set(imu_model "G365PDF1")
-#set(imu_model "G365PDC0")
-#set(imu_model "G365PDC1")
-#set(imu_model "G370PDF0")
-#set(imu_model "G370PDF1")
-#set(imu_model "G354")
-#set(imu_model "G364PDCA")
-#set(imu_model "G364PDC0")
-#set(imu_model "G320")
-#set(imu_model "V340")
-add_definitions(-D${imu_model})
-message([STATUS] "---- Building for IMU Model: ${imu_model}")
+#set(IMU_MODEL "G320PDG0")
+#set(IMU_MODEL "G330PDG0")
+#set(IMU_MODEL "G354PDH0")
+#set(IMU_MODEL "G364PDC0")
+#set(IMU_MODEL "G364PDCA")
+#set(IMU_MODEL "G365PDC1")
+#set(IMU_MODEL "G365PDF1")
+set(IMU_MODEL "G366PDG0")
+#set(IMU_MODEL "G370PDF1")
+#set(IMU_MODEL "G370PDS0")
+#set(IMU_MODEL "G370PDG0")
+#set(IMU_MODEL "G370PDT0")
+#set(IMU_MODEL "V340PDD0")
+
+add_definitions(-D${IMU_MODEL})
+add_definitions(-DBUILD_FOR=\"${IMU_MODEL}\")
 
 # support RaspberryPi only
-set(platform "RPI")
-add_definitions(-D${platform})
-message([STATUS] "---- Building for platform: ${platform}")
+set(PLATFORM "RPI")
+add_definitions(-D${PLATFORM})
+message(STATUS "-- Building for platform: ${PLATFORM}")
 
 # support SPI only
-set(interface "SPI")
-add_definitions(-D${interface})
-message([STATUS] "---- Building for interface: ${interface}")
+set(INTERFACE "SPI")
+add_definitions(-D${INTERFACE})
+message(STATUS "-- Building for interface: ${INTERFACE}")
 
-
-# Setting macro NATIVE_QUAT enables hardware quaternion output function in G325/G365 only 
-# and has no effect for any other IMU models
-# If not defined then quaternion output is emulated by converting from G325/G365 Euler output using ROS tf2 library
-# NATIVE_QUAT is recommended over software conversion from euler output
-add_definitions(-DNATIVE_QUAT)
+# Specify DEBUG macro to enable any debug code by adding "-DDEBUG" in add_definitions()
+#add_definitions(-DDEBUG)
 
 
 # Create filelist macro of C sources for library
@@ -72,51 +67,51 @@ set(lib_sources
 )
 
 # Add IMU model specific C source to filelist macro
-if (imu_model STREQUAL "G365PDF0")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG365.c)
-elseif (imu_model STREQUAL "G365PDF1")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG365.c)
-elseif (imu_model STREQUAL "G365PDC0")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG365.c)
-elseif (imu_model STREQUAL "G365PDC1")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG365.c)
-elseif (imu_model STREQUAL "G370PDF0")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG370.c)
-elseif (imu_model STREQUAL "G370PDF1")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG370.c)
-elseif (imu_model STREQUAL "G325PDF0")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG325.c)
-elseif (imu_model STREQUAL "G325PDF1")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG325.c)
-elseif (imu_model STREQUAL "G354")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG354.c)
-elseif (imu_model STREQUAL "G364PDCA")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG364.c)
-elseif (imu_model STREQUAL "G364PDC0")
-  set(lib_sources ${lib_sources}
-    src/sensor_epsonG364.c)
-elseif (imu_model STREQUAL "G320")
+if (IMU_MODEL STREQUAL "G320PDG0")
   set(lib_sources ${lib_sources}
     src/sensor_epsonG320.c)
-elseif (imu_model STREQUAL "V340")
+elseif (IMU_MODEL STREQUAL "G330PDG0")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG330_G366.c)
+elseif (IMU_MODEL STREQUAL "G354PDH0")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG354.c)
+elseif (IMU_MODEL STREQUAL "G364PDC0")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG364.c)
+elseif (IMU_MODEL STREQUAL "G364PDCA")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG364.c)
+elseif (IMU_MODEL STREQUAL "G365PDC1")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG365.c)
+elseif (IMU_MODEL STREQUAL "G365PDF1")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG365.c)
+elseif (IMU_MODEL STREQUAL "G366PDG0")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG330_G366.c)
+elseif (IMU_MODEL STREQUAL "G370PDF1")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG370.c)
+elseif (IMU_MODEL STREQUAL "G370PDS0")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG370.c)
+elseif (IMU_MODEL STREQUAL "G370PDG0")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG370.c)
+elseif (IMU_MODEL STREQUAL "G370PDT0")
+  set(lib_sources ${lib_sources}
+    src/sensor_epsonG370.c)
+elseif (IMU_MODEL STREQUAL "V340PDD0")
   set(lib_sources ${lib_sources}
     src/sensor_epsonV340.c)
 else()
-  message([FATAL_ERROR] "**** Invalid IMU Model")
+  message(FATAL_ERROR "**** Invalid IMU Model")
 endif()
 
 # Declare static library for Epson IMU functions
-add_library(epson_imu_spi_driver_lib STATIC
+add_library(ess_imu_ros2_spi_driver STATIC
   ${lib_sources}
 )
 
@@ -125,11 +120,11 @@ add_library(epson_imu_spi_driver_lib STATIC
 find_library(wiringPi_LIB NAMES wiringPi)
 
 # Declare C++ executable
-add_executable(imu_node src/epson_imu_node.cpp)
+add_executable(ess_imu_spi_node src/epson_imu_spi_node.cpp)
 
 # Link Epson IMU C Library to the ROS node
-target_link_libraries(imu_node
-  epson_imu_spi_driver_lib
+target_link_libraries(ess_imu_spi_node
+  ess_imu_ros2_spi_driver
   ${wiringPi_LIB}
   crypt
   rt
@@ -137,7 +132,7 @@ target_link_libraries(imu_node
 )
 
 # Link C++ Library to the ROS node
-ament_target_dependencies(imu_node
+ament_target_dependencies(ess_imu_spi_node
   rclcpp
   std_msgs
   sensor_msgs
@@ -145,7 +140,7 @@ ament_target_dependencies(imu_node
 
 # Mark executables and/or libraries for installation
 install(
-   TARGETS imu_node
+   TARGETS ess_imu_spi_node
    DESTINATION lib/${PROJECT_NAME}
  )
 

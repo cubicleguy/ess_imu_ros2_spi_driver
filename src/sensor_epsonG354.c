@@ -13,8 +13,11 @@
 //  SOFTWARE.
 //
 //==============================================================================
+
+#include <stdio.h>
+#include <stdint.h>
+
 #include "hcl.h"
-#include "hcl_gpio.h"
 #include "sensor_epsonCommon.h"
 
 /*****************************************************************************
@@ -22,7 +25,7 @@
 ** Description:         Initialize the sensor hardware to desired settings
 **                      based on EpsonOptions
 ** Parameters:          struct EpsonOptions
-** Return value:        SUCCESS or FAIL
+** Return value:        OK or NG
 **
 *****************************************************************************/
 int sensorInitOptions(struct EpsonOptions options) {
@@ -112,7 +115,7 @@ int sensorInitOptions(struct EpsonOptions options) {
 
   if (retryCount == 0) {
     printf("\r\n...Error: Filter busy bit did not return to 0b.");
-    return FALSE;
+    return NG;
   }
 
 #ifdef SPI  // Always disable UART_AUTO mode for burst reading when using SPI IF
@@ -125,7 +128,7 @@ int sensorInitOptions(struct EpsonOptions options) {
   registerWriteByte(CMD_WINDOW1, ADDR_BURST_CTRL1_HI, burst_ctrl1_hi, debug);
   registerWriteByte(CMD_WINDOW1, ADDR_BURST_CTRL2_HI, burst_ctrl2_hi, debug);
 
-  return TRUE;
+  return OK;
 }
 
 /*****************************************************************************

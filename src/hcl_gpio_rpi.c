@@ -2,22 +2,25 @@
 //
 //	hcl_gpio_rpi.c - Seiko Epson Hardware Control Library
 //
-//	This layer of indirection is added to allow the sample code to call generic
-//	functions to work on multiple hardware platforms, this is the Raspberry Pi
-//	specific implementation for GPIO
+//	This layer of indirection is added to allow the sample code to call
+// generic 	functions to work on multiple hardware platforms, this is the
+// Raspberry Pi specific implementation for GPIO
 //
 //
 //  THE SOFTWARE IS RELEASED INTO THE PUBLIC DOMAIN.
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-//  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT,
-//  SECURITY, SATISFACTORY QUALITY, AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT
-//  SHALL EPSON BE LIABLE FOR ANY LOSS, DAMAGE OR CLAIM, ARISING FROM OR IN CONNECTION
-//  WITH THE SOFTWARE OR THE USE OF THE SOFTWARE.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  NONINFRINGEMENT, SECURITY, SATISFACTORY QUALITY, AND FITNESS FOR A
+//  PARTICULAR PURPOSE. IN NO EVENT SHALL EPSON BE LIABLE FOR ANY LOSS, DAMAGE
+//  OR CLAIM, ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF THE
+//  SOFTWARE.
 //
 //==============================================================================
 
-#include "hcl.h"
+#include <stdint.h>
 #include <wiringPi.h>
+
+#include "hcl.h"
 #include "hcl_gpio.h"
 
 /*****************************************************************************
@@ -25,7 +28,7 @@
 ** Description:         Initialize the RPI GPIO Interface.
 ** Parameters:          None
 ** Return value:        OK or NG
-** Note:                This function assumes seInit has been called first to
+** Note:                This function assumes seInit() has been called first to
 **                      initialise the wiringPI Library
 *****************************************************************************/
 int gpioInit(void) {

@@ -18,19 +18,15 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 
 #ifndef OK
-#define OK (1)
+#define OK (true)
 #endif
 
 #ifndef NG
-#define NG (0)
+#define NG (false)
 #endif
 
 #define FATAL                                                          \
@@ -39,6 +35,10 @@ extern "C" {
             __FILE__, errno, strerror(errno));                         \
     exit(1);                                                           \
   } while (0)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*****************************************************************************
 ** Function name:       seInit

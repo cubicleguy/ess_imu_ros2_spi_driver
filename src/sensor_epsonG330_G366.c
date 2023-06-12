@@ -1,6 +1,7 @@
 //==============================================================================
 //
-//  sensor_epsonG325.c - Epson IMU sensor protocol specific code for G325
+//  sensor_epsonG330_G366.c - Epson IMU sensor protocol specific code for
+//                                 G330PDG0, G366PDG0
 //
 //
 //  THE SOFTWARE IS RELEASED INTO THE PUBLIC DOMAIN.
@@ -12,8 +13,11 @@
 //  SOFTWARE.
 //
 //==============================================================================
+
+#include <stdio.h>
+#include <stdint.h>
+
 #include "hcl.h"
-#include "hcl_gpio.h"
 #include "sensor_epsonCommon.h"
 
 /*****************************************************************************
@@ -21,7 +25,7 @@
 ** Description:         Initialize the sensor hardware to desired settings
 **                      based on EpsonOptions
 ** Parameters:          struct EpsonOptions
-** Return value:        SUCCESS or FAIL
+** Return value:        OK or NG
 **
 *****************************************************************************/
 int sensorInitOptions(struct EpsonOptions options) {
@@ -75,7 +79,7 @@ int sensorInitOptions(struct EpsonOptions options) {
 
   // BURST_CTRL1
   // These enable or disable certain data fields in the burst read packet
-  // For G365 or G325 specifically, attitude output can be enabled or disabled.
+  // For G330 or G366 specifically, attitude output can be enabled or disabled.
 
   int burst_ctrl1_lo = (options.checksum_out & 0x1) |
                        (options.count_out & 0x1) << 1 |
@@ -100,10 +104,17 @@ int sensorInitOptions(struct EpsonOptions options) {
 
   // DLT_CTRL
   // Enable or disable Delta Angle/Velocity overflow flag in DIAG_STAT
+  // Set A_RANGE_CTRL to 1, if macro defined
   // Set the Delta Angle/Velocity Scale Factor
 
+#ifdef ACCL_RANGE_16G
+  int dlt_ctrl_hi = (options.dlt_ovf_en & 0x01) << 1 | 1;
+#else
   int dlt_ctrl_hi = (options.dlt_ovf_en & 0x01) << 1;
-  int dlt_ctrl_lo = (options.dlt_range_ctrl & 0x0F);
+#endif  // ACCL_RANGE_16G
+
+  int dlt_ctrl_lo =
+      (options.dlt_range_ctrl & 0x0F) << 4 | (options.dlt_range_ctrl & 0x0F);
 
   // ATTI_CTRL
   // Attitude Output & Delta Angle/Velocity functions are mutually exclusive.
@@ -116,7 +127,6 @@ int sensorInitOptions(struct EpsonOptions options) {
 
   // ATTI_CTRL
   // Refer to datasheet to determine the different Euler Angle configurations
-
   int atti_ctrl_lo = (options.atti_conv & 0x1f);
 
   // POL_CTRL
@@ -149,7 +159,7 @@ int sensorInitOptions(struct EpsonOptions options) {
 
   if (retryCount == 0) {
     printf("\r\n...Error: Filter busy bit did not return to 0b.");
-    return FALSE;
+    return NG;
   }
 
 #ifdef SPI  // Always disable UART_AUTO mode for burst reading when using SPI IF
@@ -166,26 +176,13 @@ int sensorInitOptions(struct EpsonOptions options) {
   registerWriteByte(CMD_WINDOW1, ADDR_ATTI_CTRL_HI, atti_ctrl_hi, debug);
   registerWriteByte(CMD_WINDOW1, ADDR_ATTI_CTRL_LO, atti_ctrl_lo, debug);
 
-  // Only supported by G365/G325
   // Setting Attitude Motion Profile
   int glob_cmd2_lo = (options.atti_profile & 0x03) << 4;
 
   registerWriteByte(CMD_WINDOW1, ADDR_GLOB_CMD2_LO, glob_cmd2_lo, debug);
   seDelayMS(EPSON_ATTI_PROFILE_DELAY);
 
-  // Check that the PROFILE_BUSY bit returns 0
-  retryCount = 3000;
-  do {
-    rxData = registerRead16(CMD_WINDOW1, ADDR_GLOB_CMD2_LO, debug);
-    retryCount--;
-  } while ((rxData & 0x0040) == 0x0040 && (retryCount != 0));
-
-  if (retryCount == 0) {
-    printf("\r\n...Error: ATTI Profile busy bit did not return to 0b.");
-    return FALSE;
-  }
-
-  return TRUE;
+  return OK;
 }
 
 /*****************************************************************************
@@ -224,7 +221,6 @@ void registerDump(void) {
   registerRead16(0x00, 0x26, debug);
   registerRead16(0x00, 0x28, debug);
 
-#ifdef G325PDF1
   registerRead16(0x00, 0x4C, debug);
   printf("\r\n");
   registerRead16(0x00, 0x50, debug);
@@ -237,7 +233,6 @@ void registerDump(void) {
   printf("\r\n");
   registerRead16(0x00, 0x5C, debug);
   registerRead16(0x00, 0x5E, debug);
-#endif  // G325PDF1
 
   registerRead16(0x00, 0x64, debug);
   printf("\r\n");
@@ -273,12 +268,6 @@ void registerDump(void) {
   registerRead16(0x01, 0x16, debug);
   printf("\r\n");
 
-#ifdef G325PDF0
-  registerRead16(0x01, 0x18, debug);
-  printf("\r\n");
-#endif  // G325PDF0
-
-  printf("\r\n");
   registerRead16(0x01, 0x6A, debug);
   registerRead16(0x01, 0x6C, debug);
   registerRead16(0x01, 0x6E, debug);

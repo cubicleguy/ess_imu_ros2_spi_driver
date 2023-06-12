@@ -1,25 +1,26 @@
 //==============================================================================
 //
-// 	epson_imu_node.cpp
+// 	epson_imu_spi_node.cpp
 //     - ROS2 node for Epson IMU sensor evaluation
 //     - This program initializes the Epson IMU and publishes ROS messages in
 //       ROS topic /epson_imu as convention per [REP 145]
 //       (http://www.ros.org/reps/rep-0145.html).
 //     - If the IMU model supports quaternion output (currently supported only
 //     by
-//       G325/G365) orientation fields are updated in published topic
+//       G330/G365/G366) orientation fields are updated in published topic
 //       /epson_imu/data
 //     - If the IMU model does not support quaternion output (currently
 //       G320/G354/G364/G370/V340) orientation fields do not update in published
 //       topic /epson_imu/data_raw
 //
-//  [This software is BSD-3 licensed.](http://opensource.org/licenses/BSD-3-Clause)
+//  [This software is BSD-3
+//  licensed.](http://opensource.org/licenses/BSD-3-Clause)
 //
 //  Original Code Development:
 //  Copyright (c) 2019, Carnegie Mellon University. All rights reserved.
 //
 //  Additional Code contributed:
-//  Copyright (c) 2020, Seiko Epson Corp. All rights reserved.
+//  Copyright (c) 2019, 2023, Seiko Epson Corp. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -31,9 +32,9 @@
 //     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //
-//  3. Neither the name of the copyright holder nor the names of its contributors
-//     may be used to endorse or promote products derived from this software
-//     without specific prior written permission.
+//  3. Neither the name of the copyright holder nor the names of its
+//     contributors may be used to endorse or promote products derived from
+//     this software without specific prior written permission.
 //
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 //  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -49,13 +50,6 @@
 //
 //==============================================================================
 
-extern "C" {
-#include "hcl.h"
-#include "hcl_gpio.h"
-#include "hcl_spi.h"
-#include "sensor_epsonCommon.h"
-}
-
 #include <chrono>
 #include <memory>
 
@@ -66,6 +60,11 @@ extern "C" {
 
 #include <iostream>
 #include <string>
+
+#include "hcl.h"
+#include "hcl_gpio.h"
+#include "hcl_spi.h"
+#include "sensor_epsonCommon.h"
 
 //=========================================================================
 // Timestamp Correction
@@ -80,7 +79,8 @@ extern "C" {
 
 class TimeCorrection {
  private:
-#if defined G354 || defined G364PDC0 || defined G364PDCA || defined V340
+#if defined G320PDG0 || defined G354PDH0 || defined G364PDC0 || \
+    defined G364PDCA || defined V340PDD0
   // Counter freq = 46875Hz, Max Count = 65535/46875 * 1e9
   const int64_t MAX_COUNT = 1398080000;
   const int64_t ALMOST_ROLLOVER = 1340000000;
@@ -172,7 +172,6 @@ rclcpp::Time TimeCorrection::get_stamp(int count) {
   return ros_time;
 }
 
-
 //=========================================================================
 // Epson IMU ROS2 C++ Node
 //
@@ -241,8 +240,8 @@ class ImuNode : public rclcpp::Node {
     imu_topic_ = "/epson_imu/data_raw";
     poll_rate_ = 4000.0;
     time_correction_ = false;
-    // ext_trigger function requires external trigger signal to IMU GPIO2_EXT pin
-    // cannot be used with time_correction at the same time
+    // ext_trigger function requires external trigger signal to IMU GPIO2_EXT
+    // pin cannot be used with time_correction at the same time
     bool ext_trigger_en_ = false;
     bool output_32bit_ = false;
 
@@ -257,12 +256,15 @@ class ImuNode : public rclcpp::Node {
     options_.temp_out = true;
     options_.gyro_out = true;
     options_.accel_out = true;
-    options_.qtn_out = false;   // Can be set true only for G365PDC1, G365PDF1, G325PDF1
+    options_.qtn_out =
+        false;  // Can be set true only for G365PDC1, G365PDF1, G325PDF1
     options_.count_out = true;  // Must be enabled for time_correction function
     options_.checksum_out = true;
-    options_.atti_mode = 1;  // 1=Euler mode 0=Inclination mode (Euler mode is typical)
-    options_.atti_profile = 0; // Can only be nonzero only for G365PDC1, G365PDF1, G325PDF1
-                               // 0=General 1=Vehicle 2=Construction Machinery
+    options_.atti_mode =
+        1;  // 1=Euler mode 0=Inclination mode (Euler mode is typical)
+    options_.atti_profile =
+        0;  // Can only be nonzero only for G365PDC1, G365PDF1, G325PDF1
+            // 0=General 1=Vehicle 2=Construction Machinery
 
     // Read parameters
     key = "frame_id";
@@ -332,8 +334,9 @@ class ImuNode : public rclcpp::Node {
     }
 
     // if quaternion is enabled then change topic to /imu/data
-    imu_topic_ =
-        (static_cast<bool>(options_.qtn_out) == false) ? "/epson_imu/data_raw" : "/epson_imu/data";
+    imu_topic_ = (static_cast<bool>(options_.qtn_out) == false)
+                     ? "/epson_imu/data_raw"
+                     : "/epson_imu/data";
 
     key = "imu_topic";
     if (this->get_parameter(key, imu_topic_)) {
@@ -369,25 +372,22 @@ class ImuNode : public rclcpp::Node {
                   "Not specified param %s. Set default value:\t%d", key.c_str(),
                   options_.atti_profile);
     }
-	
-	// Send warning if both time_correction & ext_trigger are enabled
-	if (time_correction_ && ext_trigger_en_) {
+
+    // Send warning if both time_correction & ext_trigger are enabled
+    if (time_correction_ && ext_trigger_en_) {
       RCLCPP_ERROR(this->get_logger(),
-                  "Time correction & ext_trigger both enabled");
-	  RCLCPP_WARN(this->get_logger(),
-                  "Ext_trigger will be disabled. 1PPS should be connected to GPIO2/EXT");
-	  ext_trigger_en_ = false;
-	  options_.ext_sel = 1;
-	}
-	else if (!time_correction_ && ext_trigger_en_) {
-      options_.ext_sel = 2;
-	  RCLCPP_INFO(this->get_logger(), 
-	              "Trigger should be connected to GPIO2/EXT");
-    }
-	else if (time_correction_ && !ext_trigger_en_) {
+                   "Time correction & ext_trigger both enabled");
+      RCLCPP_WARN(this->get_logger(),
+                  "Ext_trigger will be disabled. 1PPS should be connected to "
+                  "GPIO2/EXT");
       options_.ext_sel = 1;
-	  RCLCPP_INFO(this->get_logger(), 
-	              "1PPS should be connected to GPIO2/EXT");
+    } else if (!time_correction_ && ext_trigger_en_) {
+      options_.ext_sel = 2;
+      RCLCPP_INFO(this->get_logger(),
+                  "Trigger should be connected to GPIO2/EXT");
+    } else if (time_correction_ && !ext_trigger_en_) {
+      options_.ext_sel = 1;
+      RCLCPP_INFO(this->get_logger(), "1PPS should be connected to GPIO2/EXT");
     }
   }
 
@@ -419,8 +419,21 @@ class ImuNode : public rclcpp::Node {
       one_sec.sleep();
     }
 
+    IdentifyBuild();
     IdentifyDevice();
+    int result = get_prod_id().compare(BUILD_FOR);
+    if (result == 0) {
+      RCLCPP_INFO(this->get_logger(), "OK: Build matches detected device");
+    } else {
+      RCLCPP_ERROR(this->get_logger(),
+                   "*** Build *mismatch* with detected device ***");
+      RCLCPP_WARN(
+          this->get_logger(),
+          "*** Check the CMakeLists.txt for setting a compatible IMU_MODEL \
+                    variable, modify as necessary, and rebuild the driver ***");
+    }
     sensorStart();
+    RCLCPP_INFO(this->get_logger(), "Sensor started...");
   }
 
   bool InitImu(const struct EpsonOptions &options_) {
@@ -476,7 +489,12 @@ class ImuNode : public rclcpp::Node {
     return ser_num;
   }
 
+  void IdentifyBuild() {
+    RCLCPP_INFO(this->get_logger(), "Compiled for:\t%s", BUILD_FOR);
+  }
+
   void IdentifyDevice() {
+    RCLCPP_INFO(this->get_logger(), "Reading device info...");
     RCLCPP_INFO(this->get_logger(), "PRODUCT ID:\t%s", get_prod_id().c_str());
     RCLCPP_INFO(this->get_logger(), "SERIAL ID:\t%s", get_serial_id().c_str());
   }
@@ -503,24 +521,29 @@ class ImuNode : public rclcpp::Node {
           } else {
             imu_msg->header.stamp = tc.get_stamp(epson_data_.count);
           }
-        
+
           // Linear acceleration
           imu_msg->linear_acceleration.x = epson_data_.accel_x;
           imu_msg->linear_acceleration.y = epson_data_.accel_y;
           imu_msg->linear_acceleration.z = epson_data_.accel_z;
-        
+
           // Angular velocity
           imu_msg->angular_velocity.x = epson_data_.gyro_x;
           imu_msg->angular_velocity.y = epson_data_.gyro_y;
           imu_msg->angular_velocity.z = epson_data_.gyro_z;
-        
+
           // Orientation
           imu_msg->orientation.x = epson_data_.qtn1;
           imu_msg->orientation.y = epson_data_.qtn2;
           imu_msg->orientation.z = epson_data_.qtn3;
           imu_msg->orientation.w = epson_data_.qtn0;
-        
+
           imu_data_pub_->publish(*imu_msg);
+        } else {
+          RCLCPP_WARN(
+              this->get_logger(),
+              "Warning: Checksum error or incorrect delimiter bytes in imu_msg "
+              "detected");
         }
       }
     }

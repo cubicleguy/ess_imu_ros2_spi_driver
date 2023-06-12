@@ -4,13 +4,16 @@
 //
 //
 //  THE SOFTWARE IS RELEASED INTO THE PUBLIC DOMAIN.
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-//  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT, 
-//  SECURITY, SATISFACTORY QUALITY, AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT
-//  SHALL EPSON BE LIABLE FOR ANY LOSS, DAMAGE OR CLAIM, ARISING FROM OR IN CONNECTION
-//  WITH THE SOFTWARE OR THE USE OF THE SOFTWARE.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  NONINFRINGEMENT, SECURITY, SATISFACTORY QUALITY, AND FITNESS FOR A
+//  PARTICULAR PURPOSE. IN NO EVENT SHALL EPSON BE LIABLE FOR ANY LOSS, DAMAGE
+//  OR CLAIM, ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF THE
+//  SOFTWARE.
 //
 //==============================================================================
+#include <stdio.h>
+
 #include "hcl.h"
 #include "hcl_gpio.h"
 #include "hcl_spi.h"
@@ -28,13 +31,21 @@
   seDelayMicroSecs(   \
       BURST_STALL1)  // For delay after issuing Burst Read Cmd in SPI IF
 #define burstStall2() \
-  seDelayMicroSecs(BURST_STALL2)  // For delay on consecutuve cycles after Burst
+  seDelayMicroSecs(BURST_STALL2)  // For delay on consecutive cycles after Burst
                                   // Read Cmd in SPI IF
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Function Prototype Specific to SPI IF
 void sensorDataReadN(unsigned short[], unsigned int,
-                     unsigned char);  // For G350/V340 SPI IF only
+                     unsigned char);  // For V340 SPI IF only
 void sensorDataReadBurstN(unsigned short[], unsigned int);
+
+#ifdef __cplusplus
+}
+#endif
 
 static unsigned short rxdata[128];
 
@@ -79,7 +90,7 @@ void registerWriteByteNoId(unsigned char regAddr, unsigned char regByte,
 ** Function name:       registerWriteByte
 ** Description:         Write Byte to Register = Set WIN_ID,
 **                      write Data to Register
-**                      NOTE: G350/V340 does not have WINDOW_ID function
+**                      NOTE: V340 does not have WINDOW_ID function
 **                            winNumber input parameter is ignored
 ** Parameters:          Window Number, Register Address, Register
 **                      WriteDataByte, Verbose Flag
@@ -87,7 +98,7 @@ void registerWriteByteNoId(unsigned char regAddr, unsigned char regByte,
 *****************************************************************************/
 void registerWriteByte(unsigned char winNumber, unsigned char regAddr,
                        unsigned char regByte, unsigned int verbose) {
-#if !(defined(V340) || defined(G350))
+#if !(defined V340PDD0)
   registerWriteByteNoId(ADDR_WIN_CTRL, winNumber, 0);
 #endif
 
@@ -118,8 +129,7 @@ unsigned short registerRead16NoId(unsigned char regAddr, unsigned int verbose) {
   deselEpson();
 
   if (verbose) {
-    printf("REG[0x%02X] > 0x%02X%02X\t", regAddr, rxData[0],
-           rxData[1]);
+    printf("REG[0x%02X] > 0x%02X%02X\t", regAddr, rxData[0], rxData[1]);
   }
   return (rxData[0] << 8 | rxData[1]);
 }
@@ -127,7 +137,7 @@ unsigned short registerRead16NoId(unsigned char regAddr, unsigned int verbose) {
 /*****************************************************************************
 ** Function name:       registerRead16
 ** Description:         Read 16-bit from Register
-**                      NOTE: G350/V340 does not have WINDOW_ID function
+**                      NOTE: V340 does not have WINDOW_ID function
 **                            winNumber input parameter is ignored
 ** Parameters:          Window Number, Register Address, Verbose Flag
 ** Return value:        Register Read Value 16-bit
@@ -136,7 +146,7 @@ unsigned short registerRead16(unsigned char winNumber, unsigned char regAddr,
                               unsigned int verbose) {
   unsigned short rxData = 0x0000;
 
-#if !(defined(V340) || defined(G350))
+#if !(defined V340PDD0)
   registerWriteByteNoId(ADDR_WIN_CTRL, winNumber, 0);
 #endif
 
@@ -153,21 +163,21 @@ unsigned short registerRead16(unsigned char winNumber, unsigned char regAddr,
 *data
 **                      (address is incremented by 2)
 **                      NOTE: Use this instead of sensorDataReadBurstN()
-**                            for SPI IF V340/G350
+**                            for SPI IF V340
 ** Parameters:          pointer to signed short array, size of array,
 **                      register start address
 ** Return value:        none
 ** Notes:
 ** 1. Each register contains 16-bit data, and typical registers to read are:
 **
-**    For 32-bit sensor output (G320/G354/G364/G352/G362) - It is recommended to
+**    For 32-bit sensor output - It is recommended to
 *use sensorDataBurstReadN() instead.
 **    COUNT [0Ah-0Bh], DUMMY[0Ch-0Dh], TEMPC [0Eh-11h], GX GY GZ [12h-1Ch], AX
 *AY AZ [1Eh-28h]
 **    Total = Count(2) + Dummy(2) + Temp(4) + GyroXYZ(4*3) + AccelXYZ(4*3) = 32
 *bytes = 16 words
 **
-**    For 16-bit sensor output (G350/V340)
+**    For 16-bit sensor output (V340)
 **    NDFLAG [00h-01h], TEMP[02h-03h], GX GY GZ[04h-09h], AX AY AZ[0Ah-0Fh],
 *GPIO[10h-11h], COUNT[012h-13h]
 **    Total = ND_FLAGS(2) + Temp(2) + GyroXYZ(2*3) + AccelXYZ(2*3) + GPIO(2) +
@@ -199,7 +209,7 @@ void sensorDataReadN(unsigned short sensorReadData[], unsigned int readLen,
 /*****************************************************************************
 ** Function name:       sensorDataReadBurstN
 ** Description:         Perform burst read to acquire sensor data
-**                      NOTE: Not supported for SPI IF G350/V340
+**                      NOTE: Not supported for SPI IF V340
 ** Parameters:          pointer to signed short array, size of array
 ** Return value:        none
 ** Notes:
@@ -292,7 +302,7 @@ void populateEpsonData(struct EpsonOptions options,
   // stores the sensor data array index when parsing out data fields
   int idx = 0;
 
-#ifdef V340
+#ifdef V340PDD0
   // Fixed packet format except for enabling/disabling count_out
   unsigned short ndflags = rxdata[idx];
   epson_data->ndflags = ndflags;
@@ -335,11 +345,21 @@ void populateEpsonData(struct EpsonOptions options,
   if (options.temp_out) {
     if (options.temp_bit) {
       int temp = (rxdata[idx] << 8 * 2) + rxdata[idx + 1];
+#if defined G330PDG0 || defined G366PDG0 || defined G370PDG0 || defined G370PDT0
+      epson_data->temperature = (temp)*EPSON_TEMP_SF / 65536 + 25;
+#else
       epson_data->temperature = (temp - 172621824) * EPSON_TEMP_SF / 65536 + 25;
+#endif  // defined G330PDG0 || defined G366PDG0 || defined G370PDG0 || defined
+        // G370PDT0
       idx += 2;
     } else {
       short temp = rxdata[idx];
+#if defined G330PDG0 || defined G366PDG0 || defined G370PDG0 || defined G370PDT0
+      epson_data->temperature = (temp)*EPSON_TEMP_SF + 25;
+#else
       epson_data->temperature = (temp - 2634) * EPSON_TEMP_SF + 25;
+#endif  // defined G330PDG0 || defined G366PDG0 || defined G370PDG0 || defined
+        // G370PDT0
       idx++;
     }
 #ifdef DEBUG
@@ -456,17 +476,17 @@ void populateEpsonData(struct EpsonOptions options,
 
   if (options.qtn_out) {
     if (options.qtn_bit) {
-	  int qtn0 = (rxdata[idx] << 8 * 2) + rxdata[idx + 1];
+      int qtn0 = (rxdata[idx] << 8 * 2) + rxdata[idx + 1];
       int qtn1 = (rxdata[idx + 2] << 8 * 2) + rxdata[idx + 3];
       int qtn2 = (rxdata[idx + 4] << 8 * 2) + rxdata[idx + 5];
-	  int qtn3 = (rxdata[idx + 6] << 8 * 2) + rxdata[idx + 7];
+      int qtn3 = (rxdata[idx + 6] << 8 * 2) + rxdata[idx + 7];
       epson_data->qtn0 = (double)qtn0 / 1073741824;
       epson_data->qtn1 = (double)qtn1 / 1073741824;
       epson_data->qtn2 = (double)qtn2 / 1073741824;
       epson_data->qtn3 = (double)qtn3 / 1073741824;
       idx += 8;
     } else {
-	  short qtn0 = rxdata[idx];
+      short qtn0 = rxdata[idx];
       short qtn1 = rxdata[idx + 1];
       short qtn2 = rxdata[idx + 2];
       short qtn3 = rxdata[idx + 3];
@@ -547,16 +567,17 @@ int sensorDataReadBurstNOptions(struct EpsonOptions options,
   unsigned int data_length = sensorDataByteLength(options) / 2;
 
 // Burst read the sensor data based on calculated burst size from options struct
-#ifdef V340
+#ifdef V340PDD0
   sensorDataReadN(rxdata, data_length, 0x00);
 #else
   sensorDataReadBurstN(rxdata, data_length);
-#endif
+#endif  // V340PDD0
 
-#ifdef V340
+// V340 does not support checksum, so just populate sensor data in structure
+#ifdef V340PDD0
   populateEpsonData(options, epson_data);
   return OK;
-#endif
+#endif  // V340PDD0
   if (options.checksum_out == 1) {
     unsigned short checksum = 0;
     for (unsigned int i = 0; i < data_length - 1; i++) {

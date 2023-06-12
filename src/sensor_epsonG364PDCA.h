@@ -12,8 +12,7 @@
 //  SOFTWARE.
 //
 //==============================================================================
-#ifndef EPSONG364PDCA_H_
-#define EPSONG364PDCA_H_
+#pragma once
 
 #define EPSON_ACCL_SF (.125)
 #define EPSON_GYRO_SF (.00375)
@@ -61,25 +60,27 @@
 
 - All accesses are 16 bit transfers
 - For SPI IF:
-	- For SPI write accesses - 8-bit address with msb=1b (can be even or
-							   odd) + 8-bit write data
-							 - No response
-	- For SPI read accesses  - 8-bit address with msb=0b(even only) + 8-bit
-							   dummy data
-							 - Response is transferred on MOSI on next SPI
-                               access
-							 - Return value is 16-bit read data (high byte +
-                               low byte)
+        - For SPI write accesses - 8-bit address with msb=1b (can be even or
+                                                           odd) + 8-bit write
+data
+                                                         - No response
+        - For SPI read accesses  - 8-bit address with msb=0b(even only) + 8-bit
+                                                           dummy data
+                                                         - Response is
+transferred on MOSI on next SPI access
+                                                         - Return value is
+16-bit read data (high byte + low byte)
 - For UART IF:
-	- For UART write accesses - 8-bit address with msb=1b(can be even or
+        - For UART write accesses - 8-bit address with msb=1b(can be even or
                                 odd) + 8-bit write data + Delimiter Byte
-							  - No response
-	- For UART read accesses  - 8-bit address with msb=0b(even only) + 8-bit
+                                                          - No response
+        - For UART read accesses  - 8-bit address with msb=0b(even only) + 8-bit
                                 dummy data + Delimiter Byte
-							  - Response is transferred immediately
-							  - Return value consists of Register Read
-                                Address + 16-bit read data 
-								(high byte + low byte) + Delimiter Byte
+                                                          - Response is
+transferred immediately
+                                                          - Return value
+consists of Register Read Address + 16-bit read data (high byte + low byte) +
+Delimiter Byte
 
 - NOTE: Register Address Maps that depend on the WINDOW_ID (page) */
 
@@ -190,5 +191,3 @@
 // MODE STAT
 #define VAL_SAMPLING_MODE 0x00
 #define VAL_CONFIG_MODE 0x04
-
-#endif /* EPSONG364PDCA_H_ */

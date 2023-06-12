@@ -12,8 +12,7 @@
 //  SOFTWARE.
 //
 //==============================================================================
-#ifndef EPSONV340_H_
-#define EPSONV340_H_
+#pragma once
 
 #define EPSON_ACCL_SF (.180)
 #define EPSON_GYRO_SF (.015)
@@ -61,30 +60,32 @@
 
 - All accesses are 16 bit transfers
 - For SPI IF:
-	- For SPI write accesses - 8-bit address with msb=1b (can be even or
-							   odd) + 8-bit write data
-							 - No response
-	- For SPI read accesses  - 8-bit address with msb=0b(even only) + 8-bit
-							   dummy data
-							 - Response is transferred on MOSI on next SPI
-                               access
-							 - Return value is 16-bit read data (high byte +
-                               low byte)
+        - For SPI write accesses - 8-bit address with msb=1b (can be even or
+                                                           odd) + 8-bit write
+data
+                                                         - No response
+        - For SPI read accesses  - 8-bit address with msb=0b(even only) + 8-bit
+                                                           dummy data
+                                                         - Response is
+transferred on MOSI on next SPI access
+                                                         - Return value is
+16-bit read data (high byte + low byte)
 - For UART IF:
-	- For UART write accesses - 8-bit address with msb=1b(can be even or
+        - For UART write accesses - 8-bit address with msb=1b(can be even or
                                 odd) + 8-bit write data + Delimiter Byte
-							  - No response
-	- For UART read accesses  - 8-bit address with msb=0b(even only) + 8-bit
+                                                          - No response
+        - For UART read accesses  - 8-bit address with msb=0b(even only) + 8-bit
                                 dummy data + Delimiter Byte
-							  - Response is transferred immediately
-							  - Return value consists of Register Read
-                                Address + 16-bit read data 
-								(high byte + low byte) + Delimiter Byte
+                                                          - Response is
+transferred immediately
+                                                          - Return value
+consists of Register Read Address + 16-bit read data (high byte + low byte) +
+Delimiter Byte
 
 - NOTE: Register Address Maps that depend on the WINDOW_ID (page) */
 
 // WINDOW_ID 0 (This is for compatibility with other IMUS, WINDOW_ID is not used
-// by G350)
+// by V340)
 #define ADDR_FLAG 0x00         // FLAG(ND/EA) (W0)
 #define ADDR_TEMP_LOW 0x02     // TEMPC Byte0 (W0)
 #define ADDR_TEMP_HIGH 0x02    // TEMPC Byte1 (W0)
@@ -163,5 +164,3 @@
 // MODE STAT
 #define VAL_SAMPLING_MODE 0x00
 #define VAL_CONFIG_MODE 0x04
-
-#endif /* EPSONV340_H_ */

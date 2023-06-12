@@ -15,15 +15,18 @@
 //==============================================================================
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "hcl.h"
 #include "hcl_gpio.h"
+#include "hcl_spi.h"
 #include "sensor_epsonCommon.h"
 
-#include "hcl_spi.h"
-
 int main(int argc, char *argv[]) {
+  char prod_id[9];  // Device Product ID
+  char ser_id[9];   // Device Serial ID
+
   // 1) Initialize the Seiko Epson HCL layer
   printf("\r\nInitializing HCL layer...");
   if (!seInit()) {
@@ -42,7 +45,7 @@ int main(int argc, char *argv[]) {
     seRelease();
     return -1;
   }
-  printf("...done.");
+  printf("...done.\r\n");
 
   // 3) Initialize SPI Interface
   printf("\r\nInitializing SPI interface...");
@@ -54,7 +57,19 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   sensorDummyWrite();
-  printf("...done.");
+  printf("...done.\r\n");
+
+  // 4) Print out which model executable was compiled and identify model
+  printf("\r\nCompiled for:\t" BUILD_FOR);
+  printf("\r\nReading device info...");
+  if (strcmp(BUILD_FOR, getProductId(prod_id)) != 0) {
+    printf("\r\n*** Build *mismatch* with detected device ***");
+    printf(
+        "\r\n*** Ensure you specify a compatible 'MODEL=' variable when "
+        "running make when  rebuilding the driver ***\r\n");
+  }
+  printf("\r\nPRODUCT ID:\t%s", getProductId(prod_id));
+  printf("\r\nSERIAL ID:\t%s", getSerialId(ser_id));
 
   // Incase, the IMU is currently in sampling mode, force config mode before
   // attempting to read from registers

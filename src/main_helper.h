@@ -13,11 +13,18 @@
 //
 //==============================================================================
 
-#ifndef MAIN_HELPER_H_
-#define MAIN_HELPER_H_
+#pragma once
+
+#include "sensor_epsonCommon.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Prototypes
 void printHeaderRow(FILE *fp, struct EpsonOptions);
 void printSensorRow(FILE *fp, struct EpsonOptions, struct EpsonData *, int);
 
-#endif  // MAIN_HELPER_H_
+#ifdef __cplusplus
+}
+#endif

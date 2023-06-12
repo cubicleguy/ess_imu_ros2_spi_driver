@@ -13,46 +13,46 @@
 //  SOFTWARE.
 //
 //==============================================================================
-#ifndef EPSONCOMMON_H_
-#define EPSONCOMMON_H_
+#pragma once
 
-#include <math.h>
-#include <stdio.h>
+#include <stdbool.h>
 
 #ifndef TRUE
-#define TRUE (1)
+#define TRUE (true)
 #endif
 
 #ifndef FALSE
-#define FALSE (0)
+#define FALSE (false)
 #endif
 
-#ifdef G354
+#if G320PDG0
+#include "sensor_epsonG320.h"
+#elif G330PDG0
+#include "sensor_epsonG330PDG0.h"
+#elif G354PDH0
 #include "sensor_epsonG354.h"
 #elif G364PDC0
 #include "sensor_epsonG364PDC0.h"
 #elif G364PDCA
 #include "sensor_epsonG364PDCA.h"
-#elif G320
-#include "sensor_epsonG320.h"
-#elif G365PDC0
-#include "sensor_epsonG365PDC0.h"
-#elif G365PDF0
-#include "sensor_epsonG365PDF0.h"
-#elif G370PDF0
-#include "sensor_epsonG370PDF0.h"
-#elif G325PDF0
-#include "sensor_epsonG325PDF0.h"
 #elif G365PDC1
 #include "sensor_epsonG365PDC1.h"
 #elif G365PDF1
 #include "sensor_epsonG365PDF1.h"
+#elif G366PDG0
+#include "sensor_epsonG366PDG0.h"
 #elif G370PDF1
 #include "sensor_epsonG370PDF1.h"
-#elif G325PDF1
-#include "sensor_epsonG325PDF1.h"
-#else /* V340 */
+#elif G370PDS0
+#include "sensor_epsonG370PDS0.h"
+#elif G370PDG0
+#include "sensor_epsonG370PDG0.h"
+#elif G370PDT0
+#include "sensor_epsonG370PDT0.h"
+#elif V340PDD0
 #include "sensor_epsonV340.h"
+#else  // G366PDG0
+#include "sensor_epsonG366PDG0.h"
 #endif
 
 #define DELAY_EPSON_RESET 10        // Milliseconds Reset Pulse Width
@@ -64,6 +64,10 @@
 
 // Required delay between bus cycles for serial timings
 #define EpsonStall() seDelayMicroSecs(EPSON_STALL)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct EpsonOptions {
   // MSC_CTRL
@@ -154,5 +158,9 @@ unsigned int sensorDataByteLength(struct EpsonOptions);
 void sensorDummyWrite(void);
 int sensorDataReadBurstNOptions(struct EpsonOptions, struct EpsonData*);
 void populateEpsonData(struct EpsonOptions, struct EpsonData*);
+char* getProductId(char* strDest);
+char* getSerialId(char* strDest);
 
-#endif /* EPSONCOMMON_H_ */
+#ifdef __cplusplus
+}
+#endif

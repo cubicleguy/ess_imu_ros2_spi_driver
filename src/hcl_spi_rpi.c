@@ -3,20 +3,26 @@
 //  hcl_spi_rpi.c - Seiko Epson Hardware Control Library
 //
 //  This layer of indirection is for the Raspberry Pi specific implementation
-//  of the SPI protocol. It uses the wiringPi library for the low-level SPI transfers.
+//  of the SPI protocol. It uses the wiringPi library for the low-level SPI
+//  transfers.
 //
 //
 //  THE SOFTWARE IS RELEASED INTO THE PUBLIC DOMAIN.
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-//  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, NONINFRINGEMENT,
-//  SECURITY, SATISFACTORY QUALITY, AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT
-//  SHALL EPSON BE LIABLE FOR ANY LOSS, DAMAGE OR CLAIM, ARISING FROM OR IN CONNECTION
-//  WITH THE SOFTWARE OR THE USE OF THE SOFTWARE.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  NONINFRINGEMENT, SECURITY, SATISFACTORY QUALITY, AND FITNESS FOR A
+//  PARTICULAR PURPOSE. IN NO EVENT SHALL EPSON BE LIABLE FOR ANY LOSS, DAMAGE
+//  OR CLAIM, ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF THE
+//  SOFTWARE.
 //
 //==============================================================================
-#include "hcl.h"
+
+#include <stdint.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <wiringPiSPI.h>
+
+#include "hcl.h"
 #include "hcl_spi.h"
 #include "sensor_epsonCommon.h"
 

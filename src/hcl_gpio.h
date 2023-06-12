@@ -13,16 +13,9 @@
 //
 //==============================================================================
 
-#ifndef HCL_GPIO_H_
-#define HCL_GPIO_H_
+#pragma once
 
-// Prototypes for generic GPIO functions
-int gpioInit(void);
-int gpioRelease(void);
-
-void gpioSet(uint8_t pin);
-void gpioClr(uint8_t pin);
-uint8_t gpioGetPinLevel(uint8_t pin);
+#include <stdint.h>
 
 #if RPI
 
@@ -39,6 +32,20 @@ uint8_t gpioGetPinLevel(uint8_t pin);
 #define EPSON_RESET 0
 #define EPSON_DRDY 0
 #define EPSON_CS 0
+#endif  // RPI
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
+// Prototypes for generic GPIO functions
+int gpioInit(void);
+int gpioRelease(void);
+
+void gpioSet(uint8_t pin);
+void gpioClr(uint8_t pin);
+uint8_t gpioGetPinLevel(uint8_t pin);
+
+#ifdef __cplusplus
+}
 #endif

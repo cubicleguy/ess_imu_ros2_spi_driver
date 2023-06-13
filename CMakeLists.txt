@@ -20,7 +20,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+#find_package(rosidl_default_generators REQUIRED)
 
 
 # Refer to the README_src.md inside the src folder for more details about IMU macro

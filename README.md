@@ -1,3 +1,7 @@
+** This repo is deprecated and read-only **
+
+** Please use ess_imu_driver2 instead **
+
 # README for Epson IMU Driver using SPI interface for ROS2 Node
 
 <!---toc start-->
